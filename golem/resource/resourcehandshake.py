@@ -89,6 +89,8 @@ class ResourceHandshakeSessionMixin:
             max_memory_size=max_memory_size,
             num_cores=num_cores,
             concent_enabled=self.task_server.client.concent_service.enabled,
+            provider_public_key=key_id,
+            provider_ethereum_public_key=key_id,
         )
 
         if self._is_peer_blocked(key_id):

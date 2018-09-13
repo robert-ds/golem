@@ -38,11 +38,13 @@ def verify_message_payment_address(
     # Prevent self payments. This check deserve its own reject_reason but also
     # it belongs ealier in the flow rather then here.
     if privtoaddr(ecc.get_privkey()) == decode_hex(
-            report_computed_task.eth_account):
+            report_computed_task.task_to_compute.provider_ethereum_address):
         logger.warning('Prevented self payment: %r', report_computed_task)
         return False
     # Prevent payments to zero address. Same as above.
-    if decode_hex(report_computed_task.eth_account) == b'\x00' * 20:
+    if decode_hex(
+            report_computed_task.task_to_compute.provider_ethereum_address
+    ) == b'\x00' * 20:
         logger.warning(
             'Prevented payment to zero address: %r',
             report_computed_task,

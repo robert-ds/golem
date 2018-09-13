@@ -36,7 +36,11 @@ cannot_reasons = message.tasks.CannotComputeTask.REASON
 class TaskToComputeConcentTestCase(testutils.TempDirFixture):
     def setUp(self):
         super().setUp()
+        self.keys = cryptography.ECCx(None)
         self.msg = factories.tasks.TaskToComputeFactory()
+        self.msg.want_to_compute_task.provider_public_key = encode_hex(
+            self.keys.raw_pubkey)
+        self.msg.sign_message(self.keys.raw_privkey)
         self.task_session = tasksession.TaskSession(mock.MagicMock())
         self.task_session.task_server.task_keeper\
             .task_headers[self.msg.task_id]\
@@ -66,18 +70,21 @@ class TaskToComputeConcentTestCase(testutils.TempDirFixture):
     def test_requestor_failed_to_concent(self, send_mock, *_):
         self.task_session.concent_service.enabled = True
         self.msg.concent_enabled = False
+        self.msg.sign_message(self.keys.raw_privkey)
         self.task_session._react_to_task_to_compute(self.msg)
         self.assert_rejected(send_mock)
 
     def test_requestor_concented(self, send_mock, *_):
         self.task_session.concent_service.enabled = True
         self.msg.concent_enabled = True
+        self.msg.sign_message(self.keys.raw_privkey)
         self.task_session._react_to_task_to_compute(self.msg)
         self.assert_accepted(send_mock)
 
     def test_provider_doesnt_want_concent(self, send_mock, *_):
         self.task_session.concent_service.enabled = False
         self.msg.concent_enabled = False
+        self.msg.sign_message(self.keys.raw_privkey)
         self.task_session._react_to_task_to_compute(self.msg)
         self.assert_accepted(send_mock)
 
@@ -87,6 +94,7 @@ class TaskToComputeConcentTestCase(testutils.TempDirFixture):
             *_):
         self.task_session.concent_service.enabled = False
         self.msg.concent_enabled = True
+        self.msg.sign_message(self.keys.raw_privkey)
         self.task_session._react_to_task_to_compute(self.msg)
         self.assert_rejected(
             send_mock,
@@ -96,6 +104,7 @@ class TaskToComputeConcentTestCase(testutils.TempDirFixture):
     def test_requestor_low_balance(self, send_mock, *_):
         self.task_session.concent_service.enabled = True
         self.msg.concent_enabled = True
+        self.msg.sign_message(self.keys.raw_privkey)
         self.task_session.task_server.client.transaction_system\
             .get_available_gnt.return_value = self.msg.price * 9
         self.task_session._react_to_task_to_compute(self.msg)
@@ -112,6 +121,7 @@ class TaskToComputeConcentTestCase(testutils.TempDirFixture):
             .get_available_gnt.return_value = self.msg.price * 9
         self.task_session.concent_service.enabled = False
         self.msg.concent_enabled = False
+        self.msg.sign_message(self.keys.raw_privkey)
         self.task_session._react_to_task_to_compute(self.msg)
         self.assert_rejected(
             send_mock,
@@ -121,6 +131,7 @@ class TaskToComputeConcentTestCase(testutils.TempDirFixture):
     def test_requestor_low_deposit(self, send_mock, *_):
         self.task_session.concent_service.enabled = True
         self.msg.concent_enabled = True
+        self.msg.sign_message(self.keys.raw_privkey)
         self.task_session.task_server.client.transaction_system\
             .concent_balance.return_value = int((self.msg.price * 10) * 1.5)
         self.task_session._react_to_task_to_compute(self.msg)
@@ -132,6 +143,7 @@ class TaskToComputeConcentTestCase(testutils.TempDirFixture):
     def test_requestor_short_deposit(self, send_mock, *_):
         self.task_session.concent_service.enabled = True
         self.msg.concent_enabled = True
+        self.msg.sign_message(self.keys.raw_privkey)
         self.task_session.task_server.client.transaction_system\
             .concent_timelock.return_value = 1
         self.task_session._react_to_task_to_compute(self.msg)
@@ -146,6 +158,7 @@ class TaskToComputeConcentTestCase(testutils.TempDirFixture):
             *_):
         self.task_session.concent_service.enabled = False
         self.msg.concent_enabled = False
+        self.msg.sign_message(self.keys.raw_privkey)
         self.task_session.task_server.client.transaction_system\
             .concent_balance.return_value = int((self.msg.price * 10) * 1.5)
         self.task_session.task_server.client.transaction_system\

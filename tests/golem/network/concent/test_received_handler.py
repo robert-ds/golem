@@ -238,11 +238,12 @@ class VerdictReportComputedTaskFactory(TaskServerMessageHandlerTestBase):
             requestor_public_key=msg_utils.encode_hex(
                 self.requestor_keys.raw_pubkey,
             ),
-            provider_public_key=msg_utils.encode_hex(
-                self.provider_keys.raw_pubkey,
-            ),
             sign__privkey=self.requestor_keys.raw_privkey,
         )
+        ttc.want_to_compute_task.provider_public_key = msg_utils.encode_hex(
+            self.provider_keys.raw_pubkey,
+        )
+        ttc.sign_message(self.requestor_keys.raw_privkey)
         frct = msg_factories.concents.ForceReportComputedTaskFactory(
             report_computed_task__task_to_compute=ttc,
             report_computed_task__sign__privkey=self.provider_keys.raw_privkey,
